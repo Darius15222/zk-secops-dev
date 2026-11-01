@@ -1,0 +1,20 @@
+# R-01 evidence, 2026-11-02
+
+## terraform plan (zk-platform/github): no drift
+
+Terraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.
+## active rules on zk-auth main
+deletion
+pull_request
+non_fast_forward
+
+## direct push to main
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: Review all repository rules at https://github.com/Darius15222/zk-auth/rules?ref=refs%2Fheads%2Fmain
+remote:
+remote: - Changes must be made through a pull request.
+remote:
+To github.com:Darius15222/zk-auth.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'github.com:Darius15222/zk-auth.git'
