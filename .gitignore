@@ -1,0 +1,15 @@
+# each repo under repos/ is its own git repository
+repos/
+
+# secrets and keys never enter git (R-02)
+.env
+.env.*
+!.env.example
+*.key
+keys.txt
+*.tfstate
+*.tfstate.*
+.terraform/
+kubeconfig*
+
+.claude/settings.local.json
