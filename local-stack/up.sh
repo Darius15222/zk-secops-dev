@@ -13,11 +13,10 @@ docker start k3d-zk-registry >/dev/null 2>&1 || k3d registry create zk-registry 
 if k3d cluster get zk-lab >/dev/null 2>&1; then
   k3d cluster start zk-lab
 else
-  # traefik off: ingress-nginx is installed by Terraform (zk-platform)
+  # k3s ships Traefik as the ingress controller; zk-platform uses ingressClassName traefik
   k3d cluster create zk-lab \
     --registry-use k3d-zk-registry:5001 \
     -p "443:443@loadbalancer" -p "80:80@loadbalancer" \
-    --k3s-arg "--disable=traefik@server:0" \
     --kubeconfig-update-default=false --kubeconfig-switch-context=false --wait
 fi
 
