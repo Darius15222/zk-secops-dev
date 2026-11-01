@@ -9,7 +9,7 @@ ok()  { echo "ok   $1"; }
 bad() { echo "FAIL $1"; fail=1; }
 
 s=.claude/settings.json
-for rule in 'Read(./.env)' 'Read(**/*.key)' 'Write(./docs/kb/**)' 'Write(./.claude/**)' 'Bash(git push --force*)' 'Bash(terraform destroy*)'; do
+for rule in 'Read(./.env)' 'Read(**/*.key)' 'Edit(./docs/kb/**)' 'Edit(./.claude/**)' 'Bash(git push --force*)' 'Bash(terraform destroy*)'; do
   jq -e --arg r "$rule" '.permissions.deny | index($r)' "$s" >/dev/null && ok "deny $rule" || bad "deny $rule missing"
 done
 jq -e '.hooks.PreToolUse[].hooks[].command | test("guard.sh")' "$s" >/dev/null && ok "guard.sh wired" || bad "guard.sh not wired"
