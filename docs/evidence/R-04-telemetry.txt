@@ -1,0 +1,23 @@
+# R-04 evidence, 2026-11-02
+
+Traffic through Traefik (TLS): zk register + login, replay of the same proof, forged proof, 25 wrong passwords.
+
+## data streams
+.ds-logs-suricata-default-2026.11.01-000001 10401
+.ds-logs-zkauth-default-2026.11.02-000001      32
+
+## zk-auth events by action / outcome / reason (logs-zkauth-default)
+{"action":"login-password","outcomes":[{"failure":25,"reasons":["invalid_password=25"]}]}
+{"action":"login-zk","outcomes":[{"failure":2,"reasons":["invalid_proof=1","nonce_reuse=1"]},{"success":1,"reasons":[]}]}
+{"action":"register-password","outcomes":[{"success":1,"reasons":[]}]}
+{"action":"register-zk","outcomes":[{"success":1,"reasons":[]}]}
+
+## ECS mappings
+[{"@timestamp":"date"},{"source.ip":"ip"},{"event.outcome":"keyword"}]
+
+## Suricata via Logstash (logs-suricata-default)
+{"event_types":["flow=3509","dns=3492","http=1488","fileinfo=1232","tls=956","alert=29","anomaly=2"],"alerts":["ZK-LAB auth request=28","ZK-LAB login burst=1"]}
+
+## pipeline tests (zk-detections CI)
+scan pass
+test pass

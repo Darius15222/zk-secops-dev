@@ -14,6 +14,21 @@ One machine runs the whole lab: a k3d cluster with Elasticsearch and Kibana (ECK
 | cert-manager | ns `cert-manager` | `zk-lab Root CA` -> ClusterIssuer `zk-ca` |
 | ECK operator | ns `elastic-system` | manages Elasticsearch and Kibana |
 | Elasticsearch, Kibana 9.5.0 | ns `siem` | single node: health `yellow` is expected |
+| Elastic Agent (DaemonSet) | ns `siem` | zk-auth pod logs (ECS) -> `logs-zkauth-default`; Suricata `eve.json` -> Logstash |
+| Logstash | ns `siem` | runs `zk-detections/pipelines/suricata.conf` -> `logs-suricata-default` |
+| Suricata (DaemonSet) | ns `ids` | sniffs `cni0` (pod bridge) with `zk-detections/rules/suricata/local.rules` |
+| zk-auth | ns `zk-auth` | signed GHCR image pinned by digest, `https://auth.zk.local` |
+
+`zk-platform` reads pipelines and rules from the sibling checkout `repos/zk-detections`: pull it before `make up`.
+
+## Data Flow
+
+```
+client --TLS--> Traefik --HTTP (cni0)--> zk-auth --stdout ECS--> /var/log/pods --> Elastic Agent --> Elasticsearch
+                                 \--> Suricata (eve.json) --> Elastic Agent --> Logstash (ECS) --> Elasticsearch --> Kibana
+```
+
+Inside k3d, client IPs are rewritten by the service load balancer: `source.ip` in zk-auth events is the bridge gateway (`10.42.0.1`), and Suricata sees Traefik as the source.
 
 ## Prerequisites
 
@@ -21,7 +36,7 @@ docker, k3d, floci, terraform, kubectl, sops, age (key in `~/.config/sops/age/ke
 
 One-time host setup:
 
-1. `/etc/hosts`: `127.0.0.1 kibana.zk.local`
+1. `/etc/hosts`: `127.0.0.1 kibana.zk.local auth.zk.local`
 2. Trust the lab CA in the browser. Export it: `kubectl --kubeconfig ~/.kube/config.zk-lab -n cert-manager get secret zk-root-ca -o jsonpath='{.data.ca\.crt}' | base64 -d > zk-root-ca.crt`, then import it in the browser certificate settings (Firefox: Settings > Certificates > Authorities > Import). Remove it when the course ends.
 
 ## Start And Stop
