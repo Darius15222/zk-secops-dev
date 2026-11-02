@@ -49,6 +49,7 @@ All from `repos/zk-platform`:
 | `make up` | Starts floci, registry and cluster, then `terraform apply` on `envs/local` |
 | `make down` | Stops cluster and registry; data is kept |
 | `make plan` | Shows drift without changing anything |
+| `make detections` | Loads the Sigma rules from `repos/zk-detections` into Elastic Security (also run by `make up`) |
 | `make show-password` | Prints the `zk-admin` Kibana password (humans only; the assistant is blocked from `sops -d`) |
 
 Kibana: `https://kibana.zk.local`, user `zk-admin`.
