@@ -28,12 +28,21 @@ Rules here are a dispatch layer: each `Trigger:` names the policy that governs i
 - Never force-push, `git reset --hard`, `git clean` or rewrite published history.
 - Never `terraform apply` outside `envs/local`. Never `terraform destroy` without the user asking in this session.
 
+## Skills
+
+- Trigger: a CI check is red. Run `pr-failure-triage`.
+- Trigger: before pushing or opening a PR. Run `pipeline-check`.
+- Trigger: any change under `repos/zk-detections`, or a detection that does not fire. Run `detection-test`.
+- Trigger: a Terraform change in `repos/zk-platform`, or a plan with destroys. Run `iac-review`.
+- Trigger: a control is added, merged or proven. Run `risk-register-update`.
+
 ## Commands
 
 | Command | Does |
 |---|---|
 | `scripts/claude-lockdown.sh` | Checks `.claude/settings.json` and proves the hooks block what they should |
 | `pre-commit run --all-files` | gitleaks, YAML checks, Terraform fmt, checkov |
+| `make -C repos/zk-platform up` / `attack` | Local stack up; simulated attack that must raise one alert per rule |
 
 ## Docs
 
