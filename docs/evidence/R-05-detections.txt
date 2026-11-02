@@ -1,0 +1,18 @@
+# R-05 evidence, 2026-11-02
+
+Sigma rules (zk-detections/rules/sigma) -> sigma-cli ES|QL -> Terraform elasticstack_kibana_security_detection_rule (zk-platform/envs/detections).
+Attack replayed at 08:45 UTC through Traefik: zk login, replay of the same proof, forged proof, 25 wrong passwords.
+
+## rules loaded
+SIGMA - Suricata ZK-LAB login burst  (rule_id b8f14aa0-2649-4112-9ddf-da905791c1a5)
+SIGMA - zk-auth Schnorr proof replay  (rule_id 196f4644-7f8a-486c-9d55-e0799db818cd)
+SIGMA - zk-auth brute force from one source  (rule_id 9474a81c-779a-4b9d-b0a9-75d2c06192d4)
+SIGMA - zk-auth forged Schnorr proof  (rule_id 1f6c9e27-7bc7-4fcd-a231-de64fdee24d8)
+
+## alerts (.alerts-security.alerts-default), one per rule
+{"rule":"SIGMA - Suricata ZK-LAB login burst","severity":"medium","risk":47,"mitre":["T1110"],"source_ip":"10.42.0.51","user":null,"reason":null,"event_count":null}
+{"rule":"SIGMA - zk-auth Schnorr proof replay","severity":"high","risk":73,"mitre":["T1550"],"source_ip":"10.42.0.1","user":null,"reason":null,"event_count":null}
+{"rule":"SIGMA - zk-auth brute force from one source","severity":"high","risk":73,"mitre":["T1110"],"source_ip":"10.42.0.1","user":null,"reason":null,"event_count":27}
+{"rule":"SIGMA - zk-auth forged Schnorr proof","severity":"medium","risk":47,"mitre":["T1110"],"source_ip":"10.42.0.1","user":null,"reason":null,"event_count":null}
+
+brute force: event_count 27 = 25 wrong passwords + 2 failed zk logins from the same source within 5m (threshold 10)
