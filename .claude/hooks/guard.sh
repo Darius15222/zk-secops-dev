@@ -35,7 +35,7 @@ case $tool in
     if grep -qE 'terraform .*apply' <<<"$c" && ! grep -qE 'envs/local' <<<"$c $cwd"; then
       block "terraform apply outside envs/local"
     fi
-    grep -qE '(curl|wget)[^|]*\|[[:space:]]*(sudo +)?(ba|z)?sh' <<<"$c" && block "piping a download into a shell"
+    grep -qE '(curl|wget)[^|]*\|[[:space:]]*(sudo +)?(ba|z)?sh([^[:alnum:]_-]|$)' <<<"$c" && block "piping a download into a shell"
     ;;
   WebFetch)
     u=$(jq -r '.tool_input.url // ""' <<<"$in")

@@ -41,6 +41,7 @@ Rules here are a dispatch layer: each `Trigger:` names the policy that governs i
 | Command | Does |
 |---|---|
 | `scripts/claude-lockdown.sh` | Checks `.claude/settings.json` and proves the hooks block what they should |
+| `scripts/claude-redteam.sh` | Scores the hooks against bypass attempts and benign look-alikes (`scripts/redteam/`); misses are findings, not failures |
 | `pre-commit run --all-files` | gitleaks, YAML checks, Terraform fmt, checkov |
 | `make -C repos/zk-platform up` / `attack` | Local stack up; simulated attack that must raise one alert per rule |
 
