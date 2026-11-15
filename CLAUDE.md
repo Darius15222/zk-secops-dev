@@ -35,6 +35,8 @@ Rules here are a dispatch layer: each `Trigger:` names the policy that governs i
 - Trigger: any change under `repos/zk-detections`, or a detection that does not fire. Run `detection-test`.
 - Trigger: a Terraform change in `repos/zk-platform`, or a plan with destroys. Run `iac-review`.
 - Trigger: a control is added, merged or proven. Run `risk-register-update`.
+- Trigger: alerts to explain or triage, or after `make attack`. Run `alert-triage`.
+- Trigger: new behaviour to detect, or a new zk-auth log field. Run `sigma-rule-new`.
 
 ## Commands
 
@@ -44,6 +46,7 @@ Rules here are a dispatch layer: each `Trigger:` names the policy that governs i
 | `scripts/claude-redteam.sh` | Scores the hooks against bypass attempts and benign look-alikes (`scripts/redteam/`); misses are findings, not failures |
 | `pre-commit run --all-files` | gitleaks, YAML checks, Terraform fmt, checkov |
 | `make -C repos/zk-platform up` / `attack` | Local stack up; simulated attack that must raise one alert per rule |
+| `make -C repos/zk-platform triage` / `netpol` | Read-only JSON of recent alerts for triage; check that pods outside `siem` cannot reach it |
 
 ## Docs
 

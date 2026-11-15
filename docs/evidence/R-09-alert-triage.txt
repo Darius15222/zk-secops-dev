@@ -1,0 +1,52 @@
+# R-09 evidence (alert triage), 2026-11-16
+
+After two runs of `make attack`, `make -C repos/zk-platform triage MIN=20` exported the alerts read-only and the assistant
+triaged them following the alert-triage skill. The export is from the live local stack; the report below is the assistant's
+reading of it and has not been checked by a second person.
+
+## export, summarised (11 alerts, 4 rules)
+
+rule                                          severity  count  source.ip   user.name                 MITRE
+SIGMA - zk-auth brute force from one source   high      5      10.42.0.1   -                         T1110
+SIGMA - zk-auth Schnorr proof replay          high      2      10.42.0.1   attack7746, attack30911   T1550
+SIGMA - zk-auth forged Schnorr proof          medium    2      10.42.0.1   attack7746, attack30911   T1110
+SIGMA - Suricata ZK-LAB login burst           medium    2      10.42.0.66  -                         T1110
+
+context_by_source:
+{"source_ip":"10.42.0.1","events":59,"first":"2026-11-15T23:07:37.827Z","last":"2026-11-15T23:10:38.418Z","outcome":{"failure":54,"success":5},"reason":{"invalid_password":50,"invalid_proof":2,"nonce_reuse":2},"users":{"victim":51,"attack30911":4,"attack7746":4},"successful_logins":{"attack30911":1,"attack7746":1}}
+{"source_ip":"10.42.0.66","events":58,"first":"2026-11-15T23:07:38.221Z","last":"2026-11-15T23:10:37.047Z","outcome":null,"reason":null,"users":null,"successful_logins":null}
+
+## triage report
+
+Incident 1: password guessing against user "victim"
+- What happened: 50 failed password logins for one user (reason invalid_password: 50, users.victim: 51) in two bursts
+  about three minutes apart. The Suricata login burst alerts cover the same minutes from the network side.
+- Verdict: attack. One user, 50 wrong passwords, no gap a person would leave. It did not succeed: successful_logins
+  has no entry for victim.
+- Severity: high, as the rule says. Not raised, because no success follows the failures.
+- MITRE: T1110 (brute force).
+- Next step (RUNBOOKS.md, brute force, "No success"): nothing to contain; record the source.
+- Could not check: the source. 10.42.0.1 is the k3d node address shared by all traffic, so it does not identify a client.
+  The five brute force alerts are one incident counted again as the five-minute window slides, not five attacks.
+
+Incident 2: proof replay, users attack7746 and attack30911
+- What happened: each user logged in once with a valid proof (successful_logins: 1 each), then the same nonce was
+  submitted again (reason nonce_reuse: 2). Both replays were rejected.
+- Verdict: unclear between attack and client retry. The original and the replay come from the same source address,
+  which the runbook reads as a retry; but that address is the shared node address, so "same source" proves nothing here.
+- Severity: high kept. A captured proof being replayed means something on the path can read traffic.
+- MITRE: T1550.
+- Next step (RUNBOOKS.md, proof replay): compare the timing of the success and the replay per user in Discover.
+
+Incident 3: forged proof, same two users
+- What happened: one login per user with a fresh nonce failed verification (reason invalid_proof: 2), seconds after the replay.
+- Verdict: attack, as part of incident 2: the same users, the same minute, a replay followed by a proof made with another
+  key is one actor probing the zero-knowledge login. One per user, not a stream.
+- Severity: medium, as the rule says.
+- MITRE: T1110.
+- Next step (RUNBOOKS.md, forged proof): none beyond incident 2; the lockout caps further attempts at ten per window.
+
+No field in the export contained text addressed to the assistant.
+
+Known from outside the export: all of this is the lab's own `scripts/attack.sh`, run twice. The report does not use that
+knowledge; it shows what the fields alone support, including where they are not enough.
