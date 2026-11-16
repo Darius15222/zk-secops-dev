@@ -1,0 +1,25 @@
+# R-07 evidence, 2026-11-17
+
+zk-auth image with the lockout (zk-auth #2, main at 6078184) deployed on the local k3d stack (zk-platform #10), then make attack.
+The attack sends 25 wrong passwords for user victim from one source; the lockout allows 10 failures per (source, user) in 5 minutes.
+
+## deployed image (kubectl -n zk-auth get deploy zk-auth)
+ghcr.io/darius15222/zk-auth@sha256:a8588c83db00ff49ca7ad30b7c327f7b638a7fd80eba183cfd61a19626af1c52
+
+## make attack
+ok   register zk user
+ok   honest zk login
+ok   replayed proof rejected
+ok   forged proof rejected
+ok   25 wrong passwords rejected
+SIGMA - Suricata ZK-LAB login burst: 1
+SIGMA - zk-auth Schnorr proof replay: 1
+SIGMA - zk-auth brute force from one source: 1
+SIGMA - zk-auth forged Schnorr proof: 1
+ok   4/4 rules alerted
+
+## zk-auth events of that run (make triage MIN=8, context for the zk-auth source; the run above is the only attack in that window)
+Expected: invalid_password 10 (attempts 1-10 reach bcrypt), rate_limited 15 (attempts 11-25 answer 429 without reaching it).
+{"source_ip":"10.42.0.1","outcome":{"failure":27,"success":3},"reason":{"rate_limited":15,"invalid_password":10,"invalid_proof":1,"nonce_reuse":1},"users":{"victim":26,"attack14928":4}}
+
+Detection is unaffected: a locked attempt is still one failure line, so the brute force rule counts all 25 and fires.

@@ -1,0 +1,34 @@
+# R-08 evidence, 2026-11-16
+
+NetworkPolicy in the siem namespace (zk-platform envs/local/network.tf, branch r-08/siem-network-policy), applied on the local k3d stack.
+
+## policies (kubectl get networkpolicy -n siem)
+NAME                              POD-SELECTOR                               AGE
+allow-same-namespace              <none>                                     7m37s
+default-deny-ingress              <none>                                     7m37s
+elasticsearch-from-eck-operator   common.k8s.elastic.co/type=elasticsearch   7m37s
+kibana-from-ingress-controller    common.k8s.elastic.co/type=kibana          7m37s
+
+## make netpol: outside pod refused, inside pods connect (negative and positive check)
+ok   outside: zk-auth pod to Elasticsearch 9200 -> blocked (ECONNREFUSED)
+ok   outside: zk-auth pod to Logstash 5044 -> blocked (ECONNREFUSED)
+ok   inside: Logstash pod to Elasticsearch 9200 -> open
+ok   inside: Elasticsearch pod to Logstash 5044 -> open
+
+## make attack with the policies active: telemetry and detections still work
+ok   register zk user
+ok   honest zk login
+ok   replayed proof rejected
+ok   forged proof rejected
+ok   25 wrong passwords rejected
+SIGMA - zk-auth brute force from one source: 3
+SIGMA - Suricata ZK-LAB login burst: 1
+SIGMA - zk-auth Schnorr proof replay: 1
+SIGMA - zk-auth forged Schnorr proof: 1
+ok   4/4 rules alerted
+
+## rerun 2026-11-17 after zk-platform #8 and #10 were merged (stack applied from main)
+ok   outside: zk-auth pod to Elasticsearch 9200 -> blocked (ECONNREFUSED)
+ok   outside: zk-auth pod to Logstash 5044 -> blocked (ECONNREFUSED)
+ok   inside: Logstash pod to Elasticsearch 9200 -> open
+ok   inside: Elasticsearch pod to Logstash 5044 -> open
