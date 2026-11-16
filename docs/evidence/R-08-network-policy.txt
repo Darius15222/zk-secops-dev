@@ -26,3 +26,9 @@ SIGMA - Suricata ZK-LAB login burst: 1
 SIGMA - zk-auth Schnorr proof replay: 1
 SIGMA - zk-auth forged Schnorr proof: 1
 ok   4/4 rules alerted
+
+## rerun 2026-11-17 after zk-platform #8 and #10 were merged (stack applied from main)
+ok   outside: zk-auth pod to Elasticsearch 9200 -> blocked (ECONNREFUSED)
+ok   outside: zk-auth pod to Logstash 5044 -> blocked (ECONNREFUSED)
+ok   inside: Logstash pod to Elasticsearch 9200 -> open
+ok   inside: Elasticsearch pod to Logstash 5044 -> open
