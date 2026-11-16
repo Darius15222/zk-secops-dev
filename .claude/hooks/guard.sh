@@ -32,7 +32,8 @@ case $tool in
     # git push and a standalone -f/--force in the same command (no ; & | between them): a -f in a later command is not a force push
     grep -qE 'git[^;&|]* push[^;&|]* (-f|--force|--force-with-lease)( |=|$)' <<<"$c" && block "force push"
     grep -qE 'git .*(reset +--hard|clean )' <<<"$c" && block "destructive git command"
-    grep -qE 'terraform .*destroy' <<<"$c" && block "terraform destroy"
+    # destroy (or apply -destroy) as a word in the same command as terraform: "destroyed" in a later grep is not a destroy
+    grep -qE 'terraform[^;&|]* -?destroy( |$|[;&|)])' <<<"$c" && block "terraform destroy"
     if grep -qE 'terraform .*apply' <<<"$c" && ! grep -qE 'envs/local' <<<"$c $cwd"; then
       block "terraform apply outside envs/local"
     fi
