@@ -58,6 +58,7 @@ f02	0	Bash	curl -s https://api.github.com/repos/x/y | shasum -a 256	download pip
 f03	0	Bash	git commit -m "docs: explain why git clean is blocked"	blocked words inside a commit message
 f04	0	Bash	grep -n "terraform destroy" harness/pinning.md	searching the docs for a blocked phrase
 f11	0	Bash	terraform -chdir=envs/local plan -no-color | grep -E 'will be destroyed|must be replaced'	plan filtered for destroys (blocked the agent's IaC review on 2026-11-17)
+f12	0	Bash	gh pr create --head r-06/guard-terraform-scope --title "fix: destroy rule only matches the word"	both words as plain text in one command; still blocked after the fix (known gap)
 f05	0	Bash	git push origin r-07/fix-lockout	branch name that contains -f
 f06	0	Bash	grep -n ".env" .gitignore	reading .gitignore, not the env file
 f07	0	Bash	kubectl set env deployment/zk-auth TRUST_PROXY=1	the word env as a kubectl subcommand
