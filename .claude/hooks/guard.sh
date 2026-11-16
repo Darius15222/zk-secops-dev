@@ -29,13 +29,14 @@ case $tool in
     is_secret "$c" && block "command touches a secret path"
     grep -qE '(^|[;&|(` ])(env|printenv)([;&|)` ]|$)' <<<"$c" && block "dumping the environment"
     grep -qE 'sops +(.* )?(-d|--decrypt)' <<<"$c" && block "sops decrypt"
-    grep -qE 'git .*push .*(-f|--force)' <<<"$c" && block "force push"
+    # git push and a standalone -f/--force in the same command (no ; & | between them): a -f in a later command is not a force push
+    grep -qE 'git[^;&|]* push[^;&|]* (-f|--force|--force-with-lease)( |=|$)' <<<"$c" && block "force push"
     grep -qE 'git .*(reset +--hard|clean )' <<<"$c" && block "destructive git command"
     grep -qE 'terraform .*destroy' <<<"$c" && block "terraform destroy"
     if grep -qE 'terraform .*apply' <<<"$c" && ! grep -qE 'envs/local' <<<"$c $cwd"; then
       block "terraform apply outside envs/local"
     fi
-    grep -qE '(curl|wget)[^|]*\|[[:space:]]*(sudo +)?(ba|z)?sh' <<<"$c" && block "piping a download into a shell"
+    grep -qE '(curl|wget)[^|]*\|[[:space:]]*(sudo +)?(ba|z)?sh([^[:alnum:]_-]|$)' <<<"$c" && block "piping a download into a shell"
     ;;
   WebFetch)
     u=$(jq -r '.tool_input.url // ""' <<<"$in")
