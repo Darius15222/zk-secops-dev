@@ -1,0 +1,22 @@
+# R-03 automatic image bump evidence, 2026-11-18
+
+zk-auth CI, after it pushes and signs an image on main, opens a PR in zk-platform that replaces the zk_auth_image digest
+(zk-auth .github/workflows/ci.yml, step 'bump the image in zk-platform'). Token: fine-grained PAT ZK_PLATFORM_TOKEN,
+zk-platform only, Contents + Pull requests. zk-platform CI (lint, e2e) decides; a human merges.
+
+## zk-auth main run after merging zk-auth #10
+https://github.com/Darius15222/zk-auth/actions/runs/44278938678  success
+  test success
+  scan success
+  image success
+
+## PR opened by that run
+https://github.com/Darius15222/zk-platform/pull/14  MERGED 2026-11-18T09:53:57Z
+  commit by github-actions[bot]: chore: bump zk-auth image to bb8abdc (R-03)
+  -  default     = "ghcr.io/darius15222/zk-auth@sha256:a8588c83db00ff49ca7ad30b7c327f7b638a7fd80eba183cfd61a19626af1c52"
+  +  default     = "ghcr.io/darius15222/zk-auth@sha256:b9d6b98322cbd1edb7c44920ff10582f96b4adb65d83b3fed1b81d0811515d0b"
+  checks: e2e pass, lint pass, review pass, 
+
+## applied in envs/local, then make attack
+  running image: zk-auth ghcr.io/darius15222/zk-auth@sha256:b9d6b98322cbd1edb7c44920ff10582f96b4adb65d83b3fed1b81d0811515d0b
+  ok replayed proof rejected / forged proof rejected / 25 wrong passwords rejected; 4/4 rules alerted
