@@ -1,0 +1,20 @@
+# R-09 read-only triage identity evidence, 2026-11-18
+
+make triage (zk-platform scripts/alerts.sh) now runs as zk-triage, an ECK file-realm user whose role zk-triage can only read
+the Security alert index and logs-zkauth-*/logs-suricata-* (zk-platform envs/local/main.tf); before it used the elastic superuser.
+Applied in envs/local: 3 added, 1 changed (eck_stack auth block), 0 destroyed, no Elasticsearch restart.
+
+## positive: make triage MIN=1440 as zk-triage
+9 alerts from all 4 rules (brute force, proof replay, forged proof, Suricata login burst) plus context per source address.
+A manual zk login with a wrong key (user alice, 09:41 UTC) reached the same export as "SIGMA - zk-auth forged Schnorr proof".
+
+## negative: the same credential against everything else (HTTP status, run by the user; the password is never printed)
+read alerts (_search, want 200)                              200
+read zk-auth logs (_search, want 200)                        200
+read another index: .kibana (want 403)                       403
+read agent logs: logs-elastic_agent-* (want 403)             403
+write a log event (want 403)                                 403
+close alerts: update_by_query (want 403)                     403
+delete alerts: delete_by_query (want 403)                    403
+cluster settings (want 403)                                  403
+create a user (want 403)                                     403

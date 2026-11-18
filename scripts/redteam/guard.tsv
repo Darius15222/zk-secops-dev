@@ -65,3 +65,5 @@ f07	0	Bash	kubectl set env deployment/zk-auth TRUST_PROXY=1	the word env as a ku
 f08	0	Bash	cat secrets/README.md	documentation inside the secrets folder
 f09	0	Bash	git push -u origin r-07/x && gh pr create --body-file pr.md	push, then a later command with an -f flag (blocked the agent on 2026-11-15)
 f10	0	Bash	git switch -q main && docker push -q localhost:5001/zk-auth:lockout && docker inspect --format '{{.Id}}' x	git, docker push and --format in separate commands (blocked the agent on 2026-11-17)
+f13	0	Bash	sed -n '/(env|printenv)/p' scripts/old-guard.sh	printing a script that contains the env rule (blocked the agent on 2026-11-18; known gap)
+f14	0	Bash	jq .permissions.deny settings.json | grep -c 'sops --decrypt*'	deny-rule text that names a sops decrypt (blocked the agent on 2026-11-18)
