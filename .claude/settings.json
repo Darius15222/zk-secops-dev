@@ -4,27 +4,33 @@
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(**/*.key)",
+      "Read(**/*.pem)",
       "Read(**/keys.txt)",
       "Read(**/*.tfstate)",
       "Read(~/.config/sops/**)",
       "Read(~/.kube/**)",
+      "Read(~/.ssh/**)",
       "Edit(./docs/kb/**)",
       "Edit(./.claude/**)",
       "Bash(git push --force*)",
       "Bash(git push -f*)",
       "Bash(git push * --force*)",
       "Bash(git push * -f*)",
+      "Bash(git push * +*)",
+      "Bash(git commit --no-verify*)",
       "Bash(git reset --hard*)",
       "Bash(git clean*)",
       "Bash(terraform destroy*)",
       "Bash(sops -d*)",
-      "Bash(sops --decrypt*)"
+      "Bash(sops --decrypt*)",
+      "Bash(sops decrypt*)",
+      "Bash(sops exec-env*)"
     ]
   },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Read|Edit|Write|Bash|WebFetch",
+        "matcher": "Read|Edit|Write|Grep|Glob|Bash|WebFetch",
         "hooks": [{ "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}\"/.claude/hooks/guard.sh" }]
       }
     ],
