@@ -1,0 +1,26 @@
+# R-05 dashboard and MITRE evidence, 2026-11-18
+
+The zk-lab dashboard was built in Kibana, exported to zk-detections/dashboards/zk-lab.ndjson and imported by Terraform
+(zk-platform envs/detections, elasticstack_kibana_import_saved_objects) with make detections, after a make attack run.
+
+## terraform state: import result
+    errors          = []
+    overwrite       = true
+    space_id        = "default"
+    success         = true
+    success_count   = 3
+
+## objects in the export
+index-pattern 363dfa8f-dff8-447d-874e-ce96391c5e14 logs-zkauth-*
+index-pattern f936b354-7650-4c50-b9ea-c90661004611 .alerts-security.alerts-default
+dashboard 0f221f0f-5864-4154-8026-95bedb36c06f zk-lab
+  panel: Logins by outcome
+  panel: Failure reasons
+  panel: Alerts by rule
+  panel: Top source IPs
+
+## screenshots
+R-05-dashboard.jpg: last 24 h after the attack: 27 failures and 3 successes; failure reasons rate_limited, invalid_password,
+  invalid_proof, nonce_reuse; all 4 Sigma rules alerted; one source IP (10.42.0.1, k3d NAT, see R-07).
+R-05-mitre-coverage.jpg: Security > Rules > MITRE ATT&CK coverage, Credential Access / Brute Force (T1110) covered by 3 enabled
+  rules (brute force, forged proof, Suricata login burst); the replay rule maps to T1550 (Use Alternate Authentication Material).
