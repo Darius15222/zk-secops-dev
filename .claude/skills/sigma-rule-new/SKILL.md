@@ -18,7 +18,7 @@ A rule is accepted only when a real alert proves it. The assistant drafts; the t
    - `falsepositives`: at least one realistic case;
    - `level`: low, medium or high, with a reason you can state.
    A threshold over time is a second document in the same file with `correlation:` (see `zk_auth_bruteforce.yml`).
-4. **Make the attack reproducible.** Add the step that triggers the rule to `repos/zk-platform/scripts/attack.sh`, with an `expect` on the HTTP result, and raise the expected rule count passed to `verify-alerts.sh` (Makefile and CI).
+4. **Make the attack reproducible.** Add the step that triggers the rule to `repos/zk-platform/scripts/attack.sh`, with an `expect` on the HTTP result. `verify-alerts.sh` expects one alert per line of `rules/elastic/sigma-rules.ndjson`, so the new rule is counted without editing it.
 5. **Add a section to `RUNBOOKS.md`** for the new alert: means, check, do, false positive.
 6. **Hand over to `detection-test`**: conversion, generated ES|QL, then `make detections` and `make attack`.
 

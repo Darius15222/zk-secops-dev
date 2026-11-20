@@ -16,7 +16,7 @@ else
   # k3s ships Traefik as the ingress controller; zk-platform uses ingressClassName traefik
   k3d cluster create zk-lab \
     --registry-use k3d-zk-registry:5001 \
-    -p "443:443@loadbalancer" -p "80:80@loadbalancer" \
+    -p "127.0.0.1:443:443@loadbalancer" \
     --kubeconfig-update-default=false --kubeconfig-switch-context=false --wait
 fi
 

@@ -6,6 +6,7 @@ repos/
 .env.*
 !.env.example
 *.key
+*.pem
 keys.txt
 *.tfstate
 *.tfstate.*
