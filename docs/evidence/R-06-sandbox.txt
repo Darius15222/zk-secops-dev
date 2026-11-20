@@ -4,9 +4,11 @@ Claude Code runs every Bash command in a bubblewrap sandbox (.claude/settings.js
 the domain list in the user settings, the only scope that accepts strictAllowlist). Denied paths are masked by the kernel,
 writes outside the project and into .claude/ and docs/kb/ fail, network goes through a proxy that only lets the allowlist out.
 Since audit round 2 (2026-11-21) no command is excluded: docker, the cluster, the GitHub login and SSH keys are out of
-reach, and each nested repo's .git is read-only (hooks, config and commondir would run or redirect the user's git). The
-user runs git commit/push, gh, make and docker with the ! prefix. Before that, the excluded commands were 13 ways around
-the sandbox (guard.tsv g01-g13) and a text denylist could not close the class.
+reach, and every .git (workspace and repos) is read-only (hooks, config, commondir, index or refs would change what the
+user's git does without showing in a diff). The user runs git commit/push and gh with the ! prefix, and lab commands
+(make, docker, k3d) from a separate clone the sandbox cannot write (gitignored files such as node_modules, .terraform and
+*_override.tf are loaded by those tools). Before that, the excluded commands were 13 ways around the sandbox (guard.tsv
+g01-g13) and a text denylist could not close the class.
 
 Limits found while proving it:
 - on Linux the sandbox masks the denied paths that exist when a command starts; a file created by that same command is
@@ -39,13 +41,14 @@ ok   w01  blocked write into .claude/
 ok   w02  blocked git hook a later push would run
 ok   w03  blocked git config a later push would read
 ok   w04  blocked commondir pointing git at another config
+ok   w05  blocked the same in the workspace repo
 ok   x01  blocked docker socket (host root, cluster secrets)
 ok   x02  blocked GitHub token from the keyring
 ok   n01  blocked host outside the allowlist
 ok   n02  blocked download then run, step one
 ok   n03  open    control: allowlisted host
 
-sandbox probe: 23/23 as expected
+sandbox probe: 24/24 as expected
 
 ## scripts/claude-redteam.sh, guard.sh part (text rules; rows marked s are the probe's job now)
 FALSE-POS f03  blocked words inside a commit message
@@ -58,7 +61,9 @@ ok   sandbox enabled
 ok   sandbox required to start
 ok   no unsandboxed retry
 ok   no command excluded from the sandbox
+ok   repos/.claude read-only
+ok   .git read-only
 ok   repos/zk-auth/.git read-only
 ok   repos/zk-detections/.git read-only
 ok   repos/zk-platform/.git read-only
-lockdown: 40 ok, 0 FAIL
+lockdown: 42 ok, 0 FAIL

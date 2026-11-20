@@ -5,8 +5,8 @@ description: Review a Terraform change in zk-platform for risk before it is appl
 
 # IaC review
 
-1. Static checks in `repos/zk-platform`: `terraform fmt -check -recursive`, `terraform validate` per root, `tflint --recursive`, `checkov -d . --framework terraform --quiet --compact`.
-2. Plan the affected root: `make plan` (`envs/local`), `make github-plan` (`github`), or `terraform -chdir=envs/detections plan`.
+1. Static checks in `repos/zk-platform`: `terraform fmt -check -recursive`, `terraform validate` per root, `tflint --recursive` (each after `terraform -chdir=<root> init -backend=false -input=false`); checkov runs in CI (`! docker run` form in `.github/workflows/ci.yml`).
+2. Plan the affected root: the user runs it from the lab clone and saves it to `.out/plan.txt` (state, cluster and GitHub are out of the sandbox's reach): `! make plan` (`envs/local`), `! make github-plan` (`github`), or `! terraform -chdir=envs/detections plan`. A branch not yet merged can be checked out in the lab clone for this; never apply it there.
 3. Summarize the plan as a table: resource, action (create, update, replace, destroy), risk.
 4. Flag, in this order:
    - any destroy or replace, and whether data is lost (Elasticsearch volume, state, repositories have `prevent_destroy`);

@@ -30,7 +30,12 @@ Rules here are a dispatch layer: each `Trigger:` names the policy that governs i
 
 ## Sandbox
 
-Every Bash command runs in the sandbox; none is excluded (R-06). It cannot reach docker, the cluster, the GitHub login or SSH keys, so the user runs these with the `!` prefix: `git push`/`pull`/`fetch`, `gh`, `make` targets that touch the lab, `docker`, `k3d`, `terraform plan`. Each repo's `.git` is read-only in the sandbox too (hooks, config and `commondir` would run or redirect the user's git), so the user also runs `git switch -c`, `git add` and `git commit`. The assistant edits the files, writes the commit message and the PR body to files (`-F`, `--body-file`) and gives the exact commands. The user runs lab `make` targets from a reviewed branch: a Makefile or script the assistant changed runs outside the sandbox.
+Every Bash command runs in the sandbox; none is excluded (R-06). It cannot reach docker, the cluster, the GitHub login or SSH keys, and it cannot write any `.git` (the workspace's or a repo's: hooks, config, `commondir`, the index or refs would change what the user's git does without showing in a diff). The user runs, with the `!` prefix:
+
+- in the workspace: `git switch -c`, `git add`, `git commit`, `git push`, `gh`. The assistant edits the files, writes the commit message and PR body to files (`-F`, `--body-file`) and gives the exact commands. Before `git commit`, check `git status` for untracked files you did not expect (hooks read config files from the working tree).
+- in the lab clone `~/zk-lab-run` (outside the sandbox's write scope, only reviewed code from `main`): every `make` target that touches the lab, `docker`, `k3d`, `terraform plan`. Gitignored files the assistant can write in the workspace (`node_modules`, `.terraform`, `*_override.tf`) are loaded by those tools without showing in a diff, so lab commands never run from the workspace. Set-up and sync: `docs/running-locally/local-stack.md`.
+
+Output the assistant needs from a `!` command goes to `.out/` (gitignored): `! <cmd> > ~/Projects/zk-secops-dev/.out/<name>.txt`, then the assistant reads it with Read, so `inject-scan.sh` scans it (output of `!` itself is not scanned).
 
 ## Skills
 
@@ -50,8 +55,8 @@ Every Bash command runs in the sandbox; none is excluded (R-06). It cannot reach
 | `scripts/claude-redteam.sh` | Scores the hooks against bypass attempts and benign look-alikes (`scripts/redteam/`); misses are findings, not failures |
 | `scripts/claude-sandbox-probe.sh` | Real bypass attempts inside the Bash sandbox on canary files (the first run creates them, run it again) |
 | `pre-commit run --all-files` | gitleaks, YAML/JSON checks, guardrail lockdown (each repo has its own hooks) |
-| `make -C repos/zk-platform up` / `attack` | Local stack up; simulated attack that must raise one alert per rule |
-| `make -C repos/zk-platform triage` / `netpol` | Read-only JSON of recent alerts for triage; check that pods outside `siem` cannot reach it |
+| `! make -C repos/zk-platform up` / `attack` (lab clone) | Local stack up; simulated attack that must raise one alert per rule |
+| `! make -C repos/zk-platform triage` / `netpol` (lab clone) | Read-only JSON of recent alerts for triage; check that pods outside `siem` cannot reach it |
 
 ## Docs
 
