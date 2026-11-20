@@ -26,7 +26,11 @@ Rules here are a dispatch layer: each `Trigger:` names the policy that governs i
 ## Git safety
 
 - Never force-push, `git reset --hard`, `git clean` or rewrite published history.
-- Never `terraform apply` outside `envs/local`. Never `terraform destroy` without the user asking in this session.
+- Never `terraform apply` outside `envs/local` (`envs/detections` is applied only by `make up` / `make detections`). Never `terraform destroy` without the user asking in this session.
+
+## Sandbox
+
+Every Bash command runs in the sandbox; none is excluded (R-06). It cannot reach docker, the cluster, the GitHub login or SSH keys, so the user runs these with the `!` prefix: `git push`/`pull`/`fetch`, `gh`, `make` targets that touch the lab, `docker`, `k3d`, `terraform plan`. Each repo's `.git` is read-only in the sandbox too (hooks, config and `commondir` would run or redirect the user's git), so the user also runs `git switch -c`, `git add` and `git commit`. The assistant edits the files, writes the commit message and the PR body to files (`-F`, `--body-file`) and gives the exact commands. The user runs lab `make` targets from a reviewed branch: a Makefile or script the assistant changed runs outside the sandbox.
 
 ## Skills
 

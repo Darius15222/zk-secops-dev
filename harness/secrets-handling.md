@@ -6,7 +6,7 @@ Secrets exist in git only as SOPS ciphertext (`secrets/*.enc.yaml`). Plaintext s
 
 ## Execution Rules
 
-- Never read, print, grep, copy or source: `.env`, `.env.*` (except `.env.example`), `*.key`, `keys.txt`, `~/.config/sops/`, `~/.kube/`, kubeconfig files, `*.tfstate`, plaintext files under `secrets/`.
+- Never read, print, grep, copy or source: `.env`, `.env.*` (except `.env.example`), `*.key`, `*.pem`, `keys.txt`, `~/.config/sops/`, `~/.kube/`, `~/.ssh/`, kubeconfig files, `*.tfstate`, plaintext files under `secrets/`, and the credential stores in `sandbox.filesystem.denyRead` (`.claude/settings.json` is the full list).
 - Never run `sops -d`, `env` or `printenv`. Decryption happens only inside `make` targets the user runs.
 - New secret: the user encrypts it with `sops --encrypt`; the assistant only writes the `.sops.yaml` rule and the code that consumes the decrypted value.
 - A new secret-bearing path must be added to `.gitignore`, `.claude/settings.json` (Read deny rules and `sandbox.filesystem.denyRead`) and `.claude/hooks/guard.sh` in the same change.

@@ -9,8 +9,8 @@ One machine runs the whole lab: a k3d cluster with Elasticsearch and Kibana (ECK
 | Component | Where | Notes |
 |---|---|---|
 | floci `:4566` | Docker on the host | S3 bucket `zk-tfstate` holds Terraform state; shared with other projects, never stopped by `down.sh` |
-| `k3d-zk-registry` `:5001` | Docker on the host | local images for the cluster |
-| k3d cluster `zk-lab` | Docker, ports 80/443 | Traefik ingress (built into k3s); kubeconfig `~/.kube/config.zk-lab` |
+| `k3d-zk-registry` `127.0.0.1:5001` | Docker on the host | local images for the cluster |
+| k3d cluster `zk-lab` | Docker, `127.0.0.1:443`, API `127.0.0.1:6550` | Traefik ingress (built into k3s); kubeconfig `~/.kube/config.zk-lab` |
 | cert-manager | ns `cert-manager` | `zk-lab Root CA` -> ClusterIssuer `zk-ca` |
 | ECK operator | ns `elastic-system` | manages Elasticsearch and Kibana |
 | Elasticsearch, Kibana 9.5.0 | ns `siem` | single node: health `yellow` is expected |

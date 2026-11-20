@@ -1,4 +1,4 @@
-# R-06 evidence, 2026-11-20 (refreshed after audit round 1; first version 2026-11-02)
+# R-06 evidence, 2026-11-21 (refreshed after audit round 1; first version 2026-11-02)
 
 ## scripts/claude-lockdown.sh
 ok   deny Read(./.env)
@@ -12,6 +12,10 @@ ok   inject-scan.sh wired
 ok   sandbox enabled
 ok   sandbox required to start
 ok   no unsandboxed retry
+ok   no command excluded from the sandbox
+ok   repos/zk-auth/.git read-only
+ok   repos/zk-detections/.git read-only
+ok   repos/zk-platform/.git read-only
 ok   .claude/hooks/guard.sh executable
 ok   .claude/hooks/inject-scan.sh executable
 ok   Read /w/.env -> 2
@@ -22,7 +26,7 @@ ok   Read /w/.env.example -> 0
 ok   Write /w/docs/kb/project-knowledge.md -> 2
 ok   Read /w/docs/kb/project-knowledge.md -> 0
 ok   Bash cat .env -> 0
-ok   Bash docker run --rm -v "$PWD/.env:/e" alpine cat /e -> 2
+ok   Glob **/.env* -> 2
 ok   Bash KUBECONFIG=~/.kube/config.zk-lab kubectl get secret -A -> 2
 ok   Bash printenv -> 2
 ok   Bash sops -d secrets/admin.enc.yaml -> 2
@@ -37,3 +41,4 @@ ok   WebFetch https://www.elastic.co/docs -> 0
 ok   WebFetch https://evil.example/payload -> 2
 ok   inject-scan flags payload
 ok   inject-scan quiet on clean text
+lockdown: 40 ok, 0 FAIL

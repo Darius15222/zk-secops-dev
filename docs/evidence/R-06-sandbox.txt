@@ -1,17 +1,21 @@
-# R-06 Bash sandbox evidence, 2026-11-20
+# R-06 Bash sandbox evidence, 2026-11-21
 
 Claude Code runs every Bash command in a bubblewrap sandbox (.claude/settings.json, sandbox block; strictAllowlist and
 the domain list in the user settings, the only scope that accepts strictAllowlist). Denied paths are masked by the kernel,
 writes outside the project and into .claude/ and docs/kb/ fail, network goes through a proxy that only lets the allowlist out.
-make, terraform, docker, k3d, kubectl, gh and git push/pull/fetch run outside the sandbox (they need localhost, the docker
-socket, the cluster config or the keyring); guard.sh keeps its secret-path text rule for exactly those commands.
+Since audit round 2 (2026-11-21) no command is excluded: docker, the cluster, the GitHub login and SSH keys are out of
+reach, and each nested repo's .git is read-only (hooks, config and commondir would run or redirect the user's git). The
+user runs git commit/push, gh, make and docker with the ! prefix. Before that, the excluded commands were 13 ways around
+the sandbox (guard.tsv g01-g13) and a text denylist could not close the class.
 
 Limits found while proving it:
 - on Linux the sandbox masks the denied paths that exist when a command starts; a file created by that same command is
   readable (secrets exist beforehand, so the probe creates its canaries in a first run);
 - without strictAllowlist, auto mode let example.com and pastebin.com through; with it, the project's allowedDomains
   were ignored until the list was also set in the user settings;
-- a cd, a pipe or a redirection keeps an excluded command inside the sandbox (gh then fails with 401), as documented;
+- a * in the middle of a sandbox path is not expanded on Linux (repos/*/.git/hooks stayed writable): one entry per repo;
+- denying a path that does not exist mounts a placeholder there, and git refuses a placeholder .git/commondir, so the
+  whole .git is read-only instead;
 - environment variables are visible inside the sandbox; env dumps stay on guard.sh.
 
 ## scripts/claude-sandbox-probe.sh: real commands on canary files (only verdicts are printed)
@@ -32,21 +36,29 @@ ok   f12  blocked PEM file
 ok   f13  blocked age key file
 ok   c01  open    control: .env.example stays readable
 ok   w01  blocked write into .claude/
+ok   w02  blocked git hook a later push would run
+ok   w03  blocked git config a later push would read
+ok   w04  blocked commondir pointing git at another config
+ok   x01  blocked docker socket (host root, cluster secrets)
+ok   x02  blocked GitHub token from the keyring
 ok   n01  blocked host outside the allowlist
 ok   n02  blocked download then run, step one
 ok   n03  open    control: allowlisted host
 
-sandbox probe: 18/18 as expected
+sandbox probe: 23/23 as expected
 
 ## scripts/claude-redteam.sh, guard.sh part (text rules; rows marked s are the probe's job now)
 FALSE-POS f03  blocked words inside a commit message
 FALSE-POS f12  both words as plain text in one command; still blocked after the fix (known gap)
 FALSE-POS f13  printing a script that contains the env rule (blocked the agent on 2026-11-18; known gap)
-FALSE-POS f15  secret paths named in PR text (blocked the agent on 2026-11-20; gh runs outside the sandbox, so the text rule stays: use --body-file)
-guard: 69/73 correct, 0 missed, 4 false positives, 0 errors, 15 left to the sandbox
+guard: 68/71 correct, 0 missed, 3 false positives, 0 errors, 17 left to the sandbox
 
 ## scripts/claude-lockdown.sh
 ok   sandbox enabled
 ok   sandbox required to start
 ok   no unsandboxed retry
-36 ok, 0 FAIL
+ok   no command excluded from the sandbox
+ok   repos/zk-auth/.git read-only
+ok   repos/zk-detections/.git read-only
+ok   repos/zk-platform/.git read-only
+lockdown: 40 ok, 0 FAIL

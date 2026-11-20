@@ -31,7 +31,9 @@
       "Read(~/.docker/config.json)",
       "Read(~/.claude/.credentials.json)",
       "Read(~/.terraform.d/credentials.tfrc.json)",
-      "Read(**/kubeconfig*)"
+      "Read(**/kubeconfig*)",
+      "Read(**/.env)",
+      "Edit(./repos/*/.git/**)"
     ]
   },
   "hooks": {
@@ -62,16 +64,6 @@
     "enabled": true,
     "failIfUnavailable": true,
     "allowUnsandboxedCommands": false,
-    "excludedCommands": [
-      "make *",
-      "terraform *",
-      "docker *",
-      "k3d *",
-      "gh *",
-      "git push *",
-      "git pull *",
-      "git fetch *"
-    ],
     "filesystem": {
       "denyRead": [
         "~/.ssh",
@@ -97,7 +89,10 @@
       ],
       "denyWrite": [
         "./.claude/**",
-        "./docs/kb/**"
+        "./docs/kb/**",
+        "./repos/zk-auth/.git",
+        "./repos/zk-detections/.git",
+        "./repos/zk-platform/.git"
       ]
     },
     "network": {
