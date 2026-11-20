@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse guardrails (R-06). Reads the hook JSON on stdin; exit 2 blocks the call and shows stderr to the assistant.
 # Levels: 1 files (Read/Edit/Write/Grep/Glob), 2 shell (Bash), 3 network (WebFetch).
-# ponytail: text matching only. scripts/claude-redteam.sh lists the bypasses it cannot see (globs, encodings, interpreters).
+# ponytail: text matching only; Bash secret paths are left to the sandbox except for excluded commands. scripts/claude-redteam.sh lists the bypasses it cannot see (globs, encodings, interpreters).
 set -euo pipefail
 
 in=$(cat)
@@ -9,7 +9,7 @@ tool=$(jq -r '.tool_name // ""' <<<"$in")
 block() { echo "Blocked by policy (guard.sh): $1. See harness/secrets-handling.md." >&2; exit 2; }
 
 # .env.example is the only allowed .env file; secrets/*.enc.yaml is ciphertext and secrets/*.md is documentation
-secret_re='(^|[/ "'\''=])\.env($|[. "'\''])|\.(key|pem)($|[ "'\''])|(^|/)keys\.txt|\.config/sops|\.kube/|kubeconfig|\.tfstate|\.ssh/|(^|/)id_(rsa|ecdsa|ed25519)'
+secret_re='(^|[/ "'\''=])\.env($|[. "'\'':])|\.(key|pem)($|[ "'\''])|(^|/)keys\.txt|\.config/sops|\.kube/|kubeconfig|\.tfstate|\.ssh/|(^|/)id_(rsa|ecdsa|ed25519)'
 is_secret() {
   local s=${1//.env.example/}
   grep -qE "$secret_re" <<<"$s" && return 0
@@ -27,7 +27,11 @@ case $tool in
   Bash)
     c=$(jq -r '.tool_input.command // ""' <<<"$in")
     cwd=$(jq -r '.cwd // ""' <<<"$in")
-    is_secret "$c" && block "command touches a secret path"
+    # R-06: inside the sandbox the kernel refuses reads of secret paths however the command spells them (sandbox.filesystem
+    # in settings.json). The text rule stays only for commands the sandbox lets out (sandbox.excludedCommands); any segment
+    # that starts with one, after optional VAR=value prefixes, keeps the rule on for the whole command.
+    unsandboxed='(^|[;&|(`]) *([A-Za-z_][A-Za-z0-9_]*=[^ ]* +)*(make|terraform|docker|k3d|kubectl|gh|git( +-C +[^ ]+)? +(push|pull|fetch))( |$)'
+    grep -qE "$unsandboxed" <<<"$c" && is_secret "$c" && block "command touches a secret path"
     # environment dumps: env/printenv as a command (not "kubectl set env"), bare set, export -p, procfs, whole env objects
     grep -qE '(^|[;&|(`]) *(env|printenv)([;&|)` ]|$)' <<<"$c" && block "dumping the environment"
     grep -qE '(^|[;&|(`]) *(set|export +-p|declare +-p)( *[;&|)`]| *$)' <<<"$c" && block "dumping the environment"

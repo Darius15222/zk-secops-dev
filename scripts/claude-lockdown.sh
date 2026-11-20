@@ -14,6 +14,10 @@ for rule in 'Read(./.env)' 'Read(**/*.key)' 'Edit(./docs/kb/**)' 'Edit(./.claude
 done
 jq -e '.hooks.PreToolUse[].hooks[].command | test("guard.sh")' "$s" >/dev/null && ok "guard.sh wired" || bad "guard.sh not wired"
 jq -e '.hooks.PostToolUse[].hooks[].command | test("inject-scan.sh")' "$s" >/dev/null && ok "inject-scan.sh wired" || bad "inject-scan.sh not wired"
+# the sandbox is what stops secret reads in Bash; without these three the guard.sh text rules would be the only layer
+jq -e '.sandbox.enabled == true' "$s" >/dev/null && ok "sandbox enabled" || bad "sandbox not enabled"
+jq -e '.sandbox.failIfUnavailable == true' "$s" >/dev/null && ok "sandbox required to start" || bad "sandbox.failIfUnavailable not true"
+jq -e '.sandbox.allowUnsandboxedCommands == false' "$s" >/dev/null && ok "no unsandboxed retry" || bad "sandbox.allowUnsandboxedCommands not false"
 for h in .claude/hooks/*.sh; do [[ -x $h ]] && ok "$h executable" || bad "$h not executable"; done
 
 # expect <exit-code> <tool> <field> <value>
@@ -30,8 +34,9 @@ expect 0 Read file_path /w/secrets/admin.enc.yaml
 expect 0 Read file_path /w/.env.example
 expect 2 Write file_path /w/docs/kb/project-knowledge.md
 expect 0 Read file_path /w/docs/kb/project-knowledge.md
-expect 2 Bash command 'cat .env'
-expect 2 Bash command 'grep PASS .env.secrets'
+expect 0 Bash command 'cat .env'     # left to the sandbox: scripts/claude-sandbox-probe.sh
+expect 2 Bash command 'docker run --rm -v "$PWD/.env:/e" alpine cat /e'
+expect 2 Bash command 'KUBECONFIG=~/.kube/config.zk-lab kubectl get secret -A'
 expect 2 Bash command 'printenv'
 expect 2 Bash command 'sops -d secrets/admin.enc.yaml'
 expect 2 Bash command 'git push origin main --force'

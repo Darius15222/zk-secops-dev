@@ -13,3 +13,4 @@ keys.txt
 kubeconfig*
 
 .claude/settings.local.json
+.probe/

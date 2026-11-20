@@ -13,14 +13,17 @@ row() { # section result id note
   n[$1.all]=$((${n[$1.all]:-0} + 1))
   n[$1.$2]=$((${n[$1.$2]:-0} + 1))
 }
-score() { echo "$1: ${n[$1.ok]:-0}/${n[$1.all]:-0} correct, ${n[$1.MISS]:-0} missed, ${n[$1.FALSE-POS]:-0} false positives, ${n[$1.ERROR]:-0} errors"; }
+score() { # SANDBOX rows are not scored here: scripts/claude-sandbox-probe.sh runs them for real
+  local s=${n[$1.SANDBOX]:-0}
+  echo "$1: ${n[$1.ok]:-0}/$((${n[$1.all]:-0} - s)) correct, ${n[$1.MISS]:-0} missed, ${n[$1.FALSE-POS]:-0} false positives, ${n[$1.ERROR]:-0} errors, $s left to the sandbox"
+}
 
 echo "## guard.sh (PreToolUse): want 2 = must block, 0 = must allow"
 while IFS=$'\t' read -r id want tool val note; do
   [[ -z $id || $id == \#* ]] && continue
   jq -n --arg t "$tool" --arg f "${field[$tool]:-file_path}" --arg v "$val" '{tool_name:$t, cwd:"/w", tool_input:{($f):$v}}' \
     | "$H/guard.sh" 2>/dev/null
-  case $want$? in 22 | 00) r=ok ;; 20) r=MISS ;; 02) r=FALSE-POS ;; *) r=ERROR ;; esac
+  case $want$? in 22 | 00) r=ok ;; 20) r=MISS ;; 02) r=FALSE-POS ;; s?) r=SANDBOX ;; *) r=ERROR ;; esac
   row guard "$r" "$id" "$note"
 done <scripts/redteam/guard.tsv
 
