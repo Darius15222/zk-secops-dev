@@ -16,3 +16,4 @@ Every external dependency that executes code is pinned to an immutable reference
 
 - Resolve a SHA with `gh api repos/<owner>/<repo>/commits/<tag> --jq .sha`; a digest with `docker buildx imagetools inspect <image:tag>`.
 - Never use `latest`, a major-only tag (`v4`) or a floating branch.
+- Bumps arrive as PRs and pass CI like any change. Dependabot (`.github/dependabot.yml`) covers Actions, npm, pip, Dockerfiles and Terraform providers; Renovate (`renovate.json`) covers what Dependabot cannot see: `image:tag@sha256:` strings in workflows, Terraform and tests, and Helm chart versions. The zk-auth image in zk-platform is bumped by zk-auth CI (R-03).

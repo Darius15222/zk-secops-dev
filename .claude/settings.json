@@ -31,14 +31,84 @@
     "PreToolUse": [
       {
         "matcher": "Read|Edit|Write|Grep|Glob|Bash|WebFetch",
-        "hooks": [{ "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}\"/.claude/hooks/guard.sh" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}\"/.claude/hooks/guard.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "WebFetch|Read|Bash",
-        "hooks": [{ "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}\"/.claude/hooks/inject-scan.sh" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}\"/.claude/hooks/inject-scan.sh"
+          }
+        ]
       }
     ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "excludedCommands": [
+      "make *",
+      "terraform *",
+      "docker *",
+      "k3d *",
+      "kubectl *",
+      "gh *",
+      "git push *",
+      "git pull *",
+      "git fetch *",
+      "git -C * push *",
+      "git -C * pull *",
+      "git -C * fetch *"
+    ],
+    "filesystem": {
+      "denyRead": [
+        "~/.ssh",
+        "~/.kube",
+        "~/.config/sops",
+        "~/.aws",
+        "~/.docker/config.json",
+        "~/.git-credentials",
+        "~/.netrc",
+        "~/.claude/.credentials.json",
+        "~/.terraform.d/credentials.tfrc.json",
+        "./**/.env",
+        "./**/.env.*",
+        "./**/*.tfstate",
+        "./**/*.tfstate.*",
+        "./**/keys.txt",
+        "./**/*.key",
+        "./**/*.pem"
+      ],
+      "allowRead": [
+        "./**/.env.example"
+      ],
+      "denyWrite": [
+        "./.claude/**",
+        "./docs/kb/**"
+      ]
+    },
+    "network": {
+      "allowedDomains": [
+        "github.com",
+        "api.github.com",
+        "codeload.github.com",
+        "objects.githubusercontent.com",
+        "raw.githubusercontent.com",
+        "registry.npmjs.org",
+        "pypi.org",
+        "files.pythonhosted.org",
+        "registry.terraform.io",
+        "releases.hashicorp.com"
+      ]
+    }
   }
 }

@@ -1,0 +1,30 @@
+# R-03 Renovate and token expiry evidence, 2026-11-20
+
+Two gaps closed: pins Dependabot cannot see now get bump PRs from Renovate, and the PAT behind the automatic zk-auth image
+bump (ZK_PLATFORM_TOKEN) raises a failed scheduled run, which GitHub emails, 14 days before it expires.
+
+## Merged
+zk-auth #11 2026-11-20T20:35:56Z feat: weekly alert before ZK_PLATFORM_TOKEN expires (R-03)
+zk-auth #12 2026-11-20T20:38:06Z feat: Renovate for image digests and Helm charts Dependabot misses (R-03)
+zk-platform #15 2026-11-20T20:36:02Z feat: Renovate for image digests and Helm charts Dependabot misses (R-03)
+zk-detections #9 2026-11-20T20:36:07Z feat: Renovate for image digests and Helm charts Dependabot misses (R-03)
+All checks green on each PR; the Gemini review reported no security findings on any of them.
+
+## Token expiry (zk-auth .github/workflows/token-expiry.yml, manual runs on main)
+run 44812872559, default threshold 14 days:  success, 0 annotations (token has 87 days left)
+run 44812877950, min_days=400 (negative check): failure, annotation "ZK_PLATFORM_TOKEN expires in 87 days, renew it"
+The expiry is read from the github-authentication-token-expiration response header; the token is never printed.
+
+## Renovate (renovate.json, same file in the three repos)
+Validated against https://docs.renovatebot.com/renovate-schema.json: 0 errors in each repo.
+Only the regex manager (image:tag@sha256:digest in workflows, Terraform and tests) and the Terraform manager restricted to
+helm_release are enabled, so Renovate and Dependabot never propose the same bump. 7-day minimum release age, as Dependabot.
+Images the regex tracks (preview with the same pattern over the repos):
+  zk-auth:       aquasec/trivy:0.76.1, ghcr.io/gitleaks/gitleaks:v8.30.1, semgrep/semgrep:1.183.0
+  zk-platform:   ghcr.io/terraform-linters/tflint:v0.65.0, bridgecrew/checkov:3.4.0, jasonish/suricata:8.0.8,
+                 docker.elastic.co/{elasticsearch,kibana,elastic-agent,logstash}:9.5.0
+  zk-detections: ghcr.io/gitleaks/gitleaks:v8.30.1, docker.elastic.co/logstash/logstash:9.5.0, jasonish/suricata:8.0.8
+Helm charts: cert-manager v1.21.3, eck-operator 3.5.0, eck-stack 0.20.0.
+semgrep in zk-auth CI enforced a minimum release age on the package rule that re-enables Helm (fixed in the same PRs).
+
+Pending: the Renovate GitHub app is installed by the user on the three repos; its first PR or "up to date" log completes this.
