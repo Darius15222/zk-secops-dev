@@ -1,4 +1,4 @@
-# R-06 red-team, 2026-11-21 (refreshed after audit round 1)
+# R-06 red-team, 2026-11-21 (refreshed by the 2026-11 audit)
 
 Replays tool calls through guard.sh and texts through inject-scan.sh (scripts/redteam/*.tsv); nothing is executed.
 Rows marked s are left to the Bash sandbox and run for real by scripts/claude-sandbox-probe.sh (R-06-sandbox.txt).

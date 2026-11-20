@@ -7,7 +7,7 @@ set -euo pipefail
 
 in=$(cat)
 tool=$(jq -r '.tool_name // ""' <<<"$in")
-block() { echo "Blocked by policy (guard.sh): $1. See harness/secrets-handling.md." >&2; exit 2; }
+block() { echo "Blocked by policy (guard.sh): $1. See CLAUDE.md (Git safety, Sandbox) and harness/." >&2; exit 2; }
 
 # .env.example is the only allowed .env file; secrets/*.enc.yaml is ciphertext and secrets/*.md is documentation.
 # The credential stores at the end match sandbox.filesystem.denyRead in settings.json.

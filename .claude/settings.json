@@ -33,7 +33,12 @@
       "Read(~/.terraform.d/credentials.tfrc.json)",
       "Read(**/kubeconfig*)",
       "Read(**/.env)",
-      "Edit(./repos/*/.git/**)"
+      "Edit(./repos/*/.git/**)",
+      "Edit(./.git/**)",
+      "Edit(./repos/.claude/**)",
+      "Edit(./repos/*/.claude/**)",
+      "Edit(./repos/*/.mcp.json)",
+      "Read(~/.config/gh/**)"
     ]
   },
   "hooks": {
@@ -69,6 +74,7 @@
         "~/.ssh",
         "~/.kube",
         "~/.config/sops",
+        "~/.config/gh",
         "~/.aws",
         "~/.docker/config.json",
         "~/.git-credentials",
@@ -92,7 +98,9 @@
         "./docs/kb/**",
         "./repos/zk-auth/.git",
         "./repos/zk-detections/.git",
-        "./repos/zk-platform/.git"
+        "./repos/zk-platform/.git",
+        "./.git",
+        "./repos/.claude"
       ]
     },
     "network": {

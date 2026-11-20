@@ -21,8 +21,10 @@ jq -e '.sandbox.allowUnsandboxedCommands == false' "$s" >/dev/null && ok "no uns
 # audit 2026-11: every command that ran outside the sandbox was a way around it; the user runs them with `!`
 jq -e '(.sandbox.excludedCommands // []) == []' "$s" >/dev/null && ok "no command excluded from the sandbox" || bad "sandbox.excludedCommands not empty"
 # the user commits and pushes with `!`: git hooks, config and commondir would run or redirect that git, and none of them
-# shows in a diff, so each nested repo's .git is read-only in the sandbox (one entry per repo: a * mid-path is not expanded)
-for r in repos/*/.git; do
+# shows in a diff, so every .git is read-only in the sandbox (one entry per repo: a * mid-path is not expanded);
+# repos/.claude is in no repository, so skills or settings planted there would not show anywhere
+jq -e '.sandbox.filesystem.denyWrite | index("./repos/.claude")' "$s" >/dev/null && ok "repos/.claude read-only" || bad "repos/.claude writable from the sandbox"
+for r in .git repos/*/.git; do
   jq -e --arg g "./$r" '.sandbox.filesystem.denyWrite | index($g)' "$s" >/dev/null && ok "$r read-only" || bad "$r writable from the sandbox"
 done
 for h in .claude/hooks/*.sh; do [[ -x $h ]] && ok "$h executable" || bad "$h not executable"; done

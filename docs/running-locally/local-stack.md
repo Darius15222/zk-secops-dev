@@ -21,6 +21,18 @@ One machine runs the whole lab: a k3d cluster with Elasticsearch and Kibana (ECK
 
 `zk-platform` reads pipelines and rules from the sibling checkout `repos/zk-detections`: pull it before `make up`.
 
+## Lab clone
+
+Lab commands run from a separate clone that the assistant's sandbox cannot write, holding only what is merged on `main` (CLAUDE.md, Sandbox). Once:
+
+```bash
+git clone git@github.com:Darius15222/zk-secops-dev.git ~/zk-lab-run
+for r in zk-auth zk-platform zk-detections; do git clone git@github.com:Darius15222/$r.git ~/zk-lab-run/repos/$r; done
+(cd ~/zk-lab-run/repos/zk-auth && npm ci --ignore-scripts)
+```
+
+Before each session, from `~/zk-lab-run`: `git pull --ff-only && for r in zk-auth zk-platform zk-detections; do git -C repos/$r pull --ff-only; done`, then `npm ci --ignore-scripts` in `repos/zk-auth` if its lock file changed. Run the `make` targets below from there.
+
 ## Data Flow
 
 ```
@@ -34,7 +46,7 @@ Inside k3d, client IPs are rewritten by the service load balancer: `source.ip` i
 
 docker, k3d, floci, terraform, kubectl, sops, age (key in `~/.config/sops/age/keys.txt`), aws CLI, jq, curl, openssl, gh (for `github-*`), node 26 with a `repos/zk-auth` checkout (for `attack`).
 
-The cluster listens on `127.0.0.1:443` only, and the ingresses answer HTTPS only. A cluster created before this change keeps its old ports until it is recreated (`k3d cluster delete zk-lab`, then `make up`).
+The cluster listens on `127.0.0.1:443` only, and the ingresses answer HTTPS only. A cluster or registry created before this change keeps its old ports (all interfaces) until it is recreated: `k3d cluster delete zk-lab && k3d registry delete k3d-zk-registry`, then `make up`. Check with `docker port k3d-zk-registry` and `docker port k3d-zk-lab-serverlb`.
 
 One-time host setup:
 
@@ -64,7 +76,7 @@ Kibana: `https://kibana.zk.local`, user `zk-admin`.
 
 | Symptom | Fix |
 |---|---|
-| `make up` fails on the S3 backend | floci is not running: `floci aws start --persist ~/.floci/data` |
+| `make init` / `plan` fail on the S3 backend | floci is not running: `make up` starts it, or `floci aws start --persist ~/.floci/data` |
 | Elasticsearch `yellow` | Normal on one node (replicas have nowhere to go) |
 | Browser certificate warning | The lab CA is not imported, or `/etc/hosts` is missing the entry |
 | Port 443 already in use | Another cluster (for example `nerds-qa`) is running; stop it first |

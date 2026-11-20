@@ -5,9 +5,11 @@ description: Find why a PR's CI failed in any zk-secops repo and propose the sma
 
 # PR failure triage
 
-1. Identify the PR: a link, `<repo>#<n>`, or the current branch (`gh pr view --json number,url`).
-2. List checks: `gh pr checks <n> -R Darius15222/<repo>`. Stop if none failed; say which are still pending.
-3. For each failed job: `gh run view <run-id> -R Darius15222/<repo> --log-failed`, keep only the lines around the first error.
+gh has no GitHub login in the sandbox: the user runs the `gh` steps with `!` and saves the output to `.out/`, which the assistant reads (so `inject-scan.sh` sees it). Public check status can also be read with `curl -s https://api.github.com/repos/Darius15222/<repo>/commits/<sha>/check-runs`.
+
+1. Identify the PR: a link, `<repo>#<n>`, or the current branch (`! gh pr view --json number,url`).
+2. List checks: `! gh pr checks <n> -R Darius15222/<repo>`. Stop if none failed; say which are still pending.
+3. For each failed job: `! gh run view <run-id> -R Darius15222/<repo> --log-failed > .out/ci-<run-id>.log`; read it and keep only the lines around the first error.
 4. Classify the cause, one line each:
    - code or test failure (our change broke it)
    - scanner finding (gitleaks, semgrep, trivy, checkov): name the rule and the file

@@ -9,10 +9,10 @@ Run in the repo that changed (`repos/<name>`), report pass or fail per step, sto
 
 | Repo | Steps |
 |---|---|
-| any | `pre-commit run --all-files` |
+| any | `pre-commit run --all-files` (on the feature branch: on `main`, `no-commit-to-branch` fails by design) |
 | `zk-auth` | `npm test`, `! docker build -t zk-auth:dev .` |
-| `zk-detections` | `python3 tests/test_suricata.py -v`, `rules/build.sh` then `git diff --exit-code rules/elastic/` |
-| `zk-platform` | `terraform fmt -check -recursive`, `terraform -chdir=<root> validate` for `github`, `envs/local`, `envs/detections`; `! make plan` (local stack must be up); `! cosign verify <image> --certificate-oidc-issuer https://token.actions.githubusercontent.com --certificate-identity https://github.com/<owner>/zk-auth/.github/workflows/ci.yml@refs/heads/main` for a changed `zk_auth_image` (the same check as CI lint) |
+| `zk-detections` | `! python3 -I tests/test_suricata.py -v` (docker), `rules/build.sh` then `git diff --exit-code rules/elastic/` |
+| `zk-platform` | `terraform fmt -check -recursive`, `terraform -chdir=<root> init -backend=false -input=false` then `validate` for `github`, `envs/local`, `envs/detections`; `tflint --recursive`; checkov in CI; `! make plan` (local stack must be up); `! cosign verify <image> --certificate-oidc-issuer https://token.actions.githubusercontent.com --certificate-identity https://github.com/<owner>/zk-auth/.github/workflows/ci.yml@refs/heads/main` for a changed `zk_auth_image` (the same check as CI lint) |
 | workspace | `scripts/claude-lockdown.sh` |
 
 For a workflow change, also check:

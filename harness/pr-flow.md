@@ -11,4 +11,4 @@
 - PR body follows `docs/templates/pull-request-template.md`.
 - Before opening a PR: `pre-commit run --all-files` passes, and the repo's validation from `CLAUDE.md` passes.
 - Never push to `main`, force-push or merge without the user asking.
-- Branch, commit, push, `gh pr create` and merge run outside the sandbox (each repo's `.git` is read-only in it), so the user runs them with `!`; the assistant gives the exact commands and writes the commit message and PR body to files.
+- Branch, commit, push, `gh pr create` and merge run outside the sandbox (every `.git` is read-only in it), so the user runs them with `!`; the assistant gives the exact commands and writes the commit message and PR body to files.

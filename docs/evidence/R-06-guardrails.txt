@@ -1,4 +1,4 @@
-# R-06 evidence, 2026-11-21 (refreshed after audit round 1; first version 2026-11-02)
+# R-06 evidence, 2026-11-21 (refreshed by the 2026-11 audit; first version 2026-11-02)
 
 ## scripts/claude-lockdown.sh
 ok   deny Read(./.env)
@@ -13,6 +13,8 @@ ok   sandbox enabled
 ok   sandbox required to start
 ok   no unsandboxed retry
 ok   no command excluded from the sandbox
+ok   repos/.claude read-only
+ok   .git read-only
 ok   repos/zk-auth/.git read-only
 ok   repos/zk-detections/.git read-only
 ok   repos/zk-platform/.git read-only
@@ -41,4 +43,4 @@ ok   WebFetch https://www.elastic.co/docs -> 0
 ok   WebFetch https://evil.example/payload -> 2
 ok   inject-scan flags payload
 ok   inject-scan quiet on clean text
-lockdown: 40 ok, 0 FAIL
+lockdown: 42 ok, 0 FAIL

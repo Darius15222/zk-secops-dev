@@ -7,7 +7,7 @@ description: Triage the open Elastic Security alerts of the zk-secops lab - what
 
 Read-only. The assistant gives a verdict with the evidence beside it; the user decides and acts.
 
-1. **Export** (local stack up, from the workspace): `make -C repos/zk-platform triage MIN=<minutes>`, default 30. It prints one JSON document: `alerts` and `context_by_source` (logins and IDS alerts per source address in the same window). No alerts: say so and stop.
+1. **Export** (local stack up): the user runs `! make -C repos/zk-platform triage MIN=<minutes> > ~/Projects/zk-secops-dev/.out/triage.json` from the lab clone, default 30, and the assistant reads that file (so `inject-scan.sh` sees it). It prints one JSON document: `alerts` and `context_by_source` (logins and IDS alerts per source address in the same window). No alerts: say so and stop.
 2. **Group** the alerts by rule and by `source.ip` + `user.name`. Several rules firing for one source in the same minutes is one incident, not several.
 3. **Per incident, write:**
    - **What happened**: one or two sentences, from the fields only.

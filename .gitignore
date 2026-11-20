@@ -15,3 +15,17 @@ kubeconfig*
 
 .claude/settings.local.json
 .probe/
+# output of the user's ! commands for the assistant to read
+.out/
+# empty mount points the Claude Code sandbox leaves in the workspace root
+/.bashrc
+/.bash_profile
+/.profile
+/.zshrc
+/.zprofile
+/.gitconfig
+/.gitmodules
+/.mcp.json
+/.ripgreprc
+/.idea
+/.vscode
