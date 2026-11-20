@@ -9,8 +9,8 @@ One machine runs the whole lab: a k3d cluster with Elasticsearch and Kibana (ECK
 | Component | Where | Notes |
 |---|---|---|
 | floci `:4566` | Docker on the host | S3 bucket `zk-tfstate` holds Terraform state; shared with other projects, never stopped by `down.sh` |
-| `k3d-zk-registry` `:5001` | Docker on the host | local images for the cluster |
-| k3d cluster `zk-lab` | Docker, ports 80/443 | Traefik ingress (built into k3s); kubeconfig `~/.kube/config.zk-lab` |
+| `k3d-zk-registry` `127.0.0.1:5001` | Docker on the host | local images for the cluster |
+| k3d cluster `zk-lab` | Docker, `127.0.0.1:443`, API `127.0.0.1:6550` | Traefik ingress (built into k3s); kubeconfig `~/.kube/config.zk-lab` |
 | cert-manager | ns `cert-manager` | `zk-lab Root CA` -> ClusterIssuer `zk-ca` |
 | ECK operator | ns `elastic-system` | manages Elasticsearch and Kibana |
 | Elasticsearch, Kibana 9.5.0 | ns `siem` | single node: health `yellow` is expected |
@@ -32,7 +32,9 @@ Inside k3d, client IPs are rewritten by the service load balancer: `source.ip` i
 
 ## Prerequisites
 
-docker, k3d, floci, terraform, kubectl, sops, age (key in `~/.config/sops/age/keys.txt`), aws CLI.
+docker, k3d, floci, terraform, kubectl, sops, age (key in `~/.config/sops/age/keys.txt`), aws CLI, jq, curl, openssl, gh (for `github-*`), node 26 with a `repos/zk-auth` checkout (for `attack`).
+
+The cluster listens on `127.0.0.1:443` only, and the ingresses answer HTTPS only. A cluster created before this change keeps its old ports until it is recreated (`k3d cluster delete zk-lab`, then `make up`).
 
 One-time host setup:
 
@@ -50,6 +52,10 @@ All from `repos/zk-platform`:
 | `make down` | Stops cluster and registry; data is kept |
 | `make plan` | Shows drift without changing anything |
 | `make detections` | Loads the Sigma rules from `repos/zk-detections` into Elastic Security (also run by `make up`) |
+| `make attack` | Simulated attack; waits for one alert per detection rule |
+| `make triage` / `make netpol` | Read-only JSON of recent alerts; check that pods outside `siem` cannot reach it |
+| `make secret-elastic` | Creates the SOPS-encrypted admin password (once) |
+| `make github-plan` / `github-apply` | Repository rulesets (R-01); apply is for humans |
 | `make show-password` | Prints the `zk-admin` Kibana password (humans only; the assistant is blocked from `sops -d`) |
 
 Kibana: `https://kibana.zk.local`, user `zk-admin`.

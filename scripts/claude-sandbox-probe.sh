@@ -6,7 +6,7 @@
 set -uo pipefail
 W=$(cd "$(dirname "$0")/.." && pwd)
 d=$W/.probe # gitignored
-trap 'rm -f "$W/.claude/.probe"' EXIT
+trap 'rm -f "$W/.claude/.probe" "$W/repos/zk-auth/.git/hooks/.probe" "$W/repos/zk-auth/.git/commondir"' EXIT
 # On Linux the sandbox masks the denied paths that exist when a command starts, so a canary written by this same command
 # would be readable. Real secrets exist beforehand; the canaries are made to exist beforehand too, by a first run.
 if [[ ! -d $d ]]; then
@@ -21,7 +21,7 @@ probe() { # id want note command
   out=$(timeout 20 bash -c "$4" 2>/dev/null); rc=$?
   case $1 in
     n*) [[ $rc == 0 ]] && got=open || got=blocked ;;               # network: did the request succeed
-    w*) [[ -e $W/.claude/.probe ]] && got=open || got=blocked ;;   # write: did the file appear
+    w*|x*) [[ $rc == 0 ]] && got=open || got=blocked ;;            # write, or a tool outside: did the command succeed
     c*) grep -q CANARY <<<"$out" && got=open || got=blocked ;;     # control: the allowed canary came back
     *) grep -v CANARY-.env.example <<<"$out" | grep -q CANARY && got=open || got=blocked ;; # read: a denied canary came back
   esac
@@ -45,6 +45,11 @@ probe f12 blocked 'PEM file'                                   'cat k.pem'
 probe f13 blocked 'age key file'                               'cat keys.txt'
 probe c01 open    'control: .env.example stays readable'       'cat .env.example'
 probe w01 blocked 'write into .claude/'                        "touch '$W/.claude/.probe'"
+probe w02 blocked 'git hook a later push would run'            "touch '$W/repos/zk-auth/.git/hooks/.probe'"
+probe w03 blocked 'git config a later push would read'         "echo >> '$W/repos/zk-auth/.git/config'"
+probe w04 blocked 'commondir pointing git at another config'   ": > '$W/repos/zk-auth/.git/commondir'"
+probe x01 blocked 'docker socket (host root, cluster secrets)'  'docker ps -q'
+probe x02 blocked 'GitHub token from the keyring'              'gh auth token'
 probe n01 blocked 'host outside the allowlist'                 'curl -sSf -o /dev/null --max-time 10 https://example.com'
 probe n02 blocked 'download then run, step one'                'curl -sSf -o /dev/null --max-time 10 https://pastebin.com'
 probe n03 open    'control: allowlisted host'                  'curl -sSf -o /dev/null --max-time 10 https://api.github.com'

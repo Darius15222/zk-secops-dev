@@ -8,12 +8,12 @@ Rules here are a dispatch layer: each `Trigger:` names the policy that governs i
 
 | Folder (`repos/`) | Role | Stack | Validation |
 |---|---|---|---|
-| `zk-auth` | Minimal auth service: `/login/zk` (Schnorr) and `/login/password` (bcrypt), ECS JSON logs | see its `AGENTS.md` | its tests |
-| `zk-platform` | Terraform: k3d cluster add-ons, ECK, Elastic Agent, Logstash, Suricata, cert-manager, zk-auth, GitHub settings | Terraform | `terraform plan` only |
-| `zk-detections` | Logstash pipelines and Sigma rules with tests | Logstash, Sigma, pytest | `pytest` |
+| `zk-auth` | Minimal auth service: `/login/zk` (Schnorr) and `/login/password` (bcrypt), ECS JSON logs | see its `AGENTS.md` | `npm test` |
+| `zk-platform` | Terraform: k3d cluster add-ons, ECK, Elastic Agent, Logstash, Suricata, cert-manager, zk-auth, GitHub settings | Terraform | `terraform fmt`, `validate`, `tflint`, `checkov`; `make plan` (never apply outside `envs/local`) |
+| `zk-detections` | Logstash pipelines and Sigma rules with tests | Logstash, Suricata, Sigma, unittest | `python3 tests/test_suricata.py -v`; `rules/build.sh` leaves no diff |
 
 - Default branch everywhere: `main`. `main` accepts PRs only (R-01).
-- Relationships: `zk-auth` CI publishes an image to GHCR and notifies `zk-platform`, which deploys it. `zk-detections` CI produces rules that `zk-platform` loads into Kibana.
+- Relationships: `zk-auth` CI publishes a signed image to GHCR and opens a `zk-platform` PR with its digest. `zk-detections` holds the rules, compiled by `rules/build.sh` and drift-checked by its CI; `zk-platform` reads the sibling checkout and loads them into Kibana.
 
 ## Triggers
 
@@ -26,7 +26,11 @@ Rules here are a dispatch layer: each `Trigger:` names the policy that governs i
 ## Git safety
 
 - Never force-push, `git reset --hard`, `git clean` or rewrite published history.
-- Never `terraform apply` outside `envs/local`. Never `terraform destroy` without the user asking in this session.
+- Never `terraform apply` outside `envs/local` (`envs/detections` is applied only by `make up` / `make detections`). Never `terraform destroy` without the user asking in this session.
+
+## Sandbox
+
+Every Bash command runs in the sandbox; none is excluded (R-06). It cannot reach docker, the cluster, the GitHub login or SSH keys, so the user runs these with the `!` prefix: `git push`/`pull`/`fetch`, `gh`, `make` targets that touch the lab, `docker`, `k3d`, `terraform plan`. Each repo's `.git` is read-only in the sandbox too (hooks, config and `commondir` would run or redirect the user's git), so the user also runs `git switch -c`, `git add` and `git commit`. The assistant edits the files, writes the commit message and the PR body to files (`-F`, `--body-file`) and gives the exact commands. The user runs lab `make` targets from a reviewed branch: a Makefile or script the assistant changed runs outside the sandbox.
 
 ## Skills
 
@@ -44,7 +48,8 @@ Rules here are a dispatch layer: each `Trigger:` names the policy that governs i
 |---|---|
 | `scripts/claude-lockdown.sh` | Checks `.claude/settings.json` and proves the hooks block what they should |
 | `scripts/claude-redteam.sh` | Scores the hooks against bypass attempts and benign look-alikes (`scripts/redteam/`); misses are findings, not failures |
-| `pre-commit run --all-files` | gitleaks, YAML checks, Terraform fmt, checkov |
+| `scripts/claude-sandbox-probe.sh` | Real bypass attempts inside the Bash sandbox on canary files (the first run creates them, run it again) |
+| `pre-commit run --all-files` | gitleaks, YAML/JSON checks, guardrail lockdown (each repo has its own hooks) |
 | `make -C repos/zk-platform up` / `attack` | Local stack up; simulated attack that must raise one alert per rule |
 | `make -C repos/zk-platform triage` / `netpol` | Read-only JSON of recent alerts for triage; check that pods outside `siem` cannot reach it |
 

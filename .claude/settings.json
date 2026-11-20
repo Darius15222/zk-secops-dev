@@ -24,7 +24,16 @@
       "Bash(sops -d*)",
       "Bash(sops --decrypt*)",
       "Bash(sops decrypt*)",
-      "Bash(sops exec-env*)"
+      "Bash(sops exec-env*)",
+      "Read(~/.aws/**)",
+      "Read(~/.git-credentials)",
+      "Read(~/.netrc)",
+      "Read(~/.docker/config.json)",
+      "Read(~/.claude/.credentials.json)",
+      "Read(~/.terraform.d/credentials.tfrc.json)",
+      "Read(**/kubeconfig*)",
+      "Read(**/.env)",
+      "Edit(./repos/*/.git/**)"
     ]
   },
   "hooks": {
@@ -41,7 +50,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "WebFetch|Read|Bash",
+        "matcher": ".*",
         "hooks": [
           {
             "type": "command",
@@ -55,20 +64,6 @@
     "enabled": true,
     "failIfUnavailable": true,
     "allowUnsandboxedCommands": false,
-    "excludedCommands": [
-      "make *",
-      "terraform *",
-      "docker *",
-      "k3d *",
-      "kubectl *",
-      "gh *",
-      "git push *",
-      "git pull *",
-      "git fetch *",
-      "git -C * push *",
-      "git -C * pull *",
-      "git -C * fetch *"
-    ],
     "filesystem": {
       "denyRead": [
         "~/.ssh",
@@ -86,14 +81,18 @@
         "./**/*.tfstate.*",
         "./**/keys.txt",
         "./**/*.key",
-        "./**/*.pem"
+        "./**/*.pem",
+        "./**/kubeconfig*"
       ],
       "allowRead": [
         "./**/.env.example"
       ],
       "denyWrite": [
         "./.claude/**",
-        "./docs/kb/**"
+        "./docs/kb/**",
+        "./repos/zk-auth/.git",
+        "./repos/zk-detections/.git",
+        "./repos/zk-platform/.git"
       ]
     },
     "network": {

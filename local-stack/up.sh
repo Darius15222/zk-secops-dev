@@ -8,7 +8,7 @@ KC=${ZK_KUBECONFIG:-$HOME/.kube/config.zk-lab}
 docker start floci >/dev/null 2>&1 || floci aws start --persist "$HOME/.floci/data"
 floci aws wait
 
-docker start k3d-zk-registry >/dev/null 2>&1 || k3d registry create zk-registry --port 5001
+docker start k3d-zk-registry >/dev/null 2>&1 || k3d registry create zk-registry --port 127.0.0.1:5001
 
 if k3d cluster get zk-lab >/dev/null 2>&1; then
   k3d cluster start zk-lab
@@ -16,7 +16,7 @@ else
   # k3s ships Traefik as the ingress controller; zk-platform uses ingressClassName traefik
   k3d cluster create zk-lab \
     --registry-use k3d-zk-registry:5001 \
-    -p "443:443@loadbalancer" -p "80:80@loadbalancer" \
+    -p "127.0.0.1:443:443@loadbalancer" --api-port 127.0.0.1:6550 \
     --kubeconfig-update-default=false --kubeconfig-switch-context=false --wait
 fi
 
